@@ -82,6 +82,17 @@ export const reportService = {
     return [...currentReports];
   },
 
+  addReport(newReport) {
+    const report = {
+      id: 'rep-' + Date.now().toString().slice(-4),
+      submittedDate: 'Just now',
+      status: 'Pending',
+      ...newReport,
+    };
+    currentReports = [report, ...currentReports];
+    return report;
+  },
+
   updateReportStatus(id, newStatus) {
     currentReports = currentReports.map(r =>
       r.id === id ? { ...r, status: newStatus } : r

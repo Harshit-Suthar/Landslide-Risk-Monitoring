@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   FileText,
   Filter,
@@ -10,15 +10,47 @@ import {
   MapPin,
   X,
   Phone,
+  UploadCloud,
+  Plus,
+  Video,
+  Loader2,
 } from 'lucide-react';
 import reportService from '../../services/reportService';
+import storageService from '../../services/storageService';
 import { useToast } from '../../layouts/AdminLayout';
+
+const DISTRICTS = [
+  'Guwahati',
+  'Shillong',
+  'Itanagar',
+  'Kohima',
+  'Aizawl',
+  'Agartala',
+  'Imphal',
+  'Gangtok',
+];
 
 export default function Reports() {
   const [reports, setReports] = useState(reportService.getReports());
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedReport, setSelectedReport] = useState(null);
 
+  // Upload Modal State
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadPreview, setUploadPreview] = useState(null);
+  const [uploadMediaType, setUploadMediaType] = useState('image');
+  const [isUploading, setIsUploading] = useState(false);
+  const [newReportForm, setNewReportForm] = useState({
+    reporterName: '',
+    reporterContact: '',
+    location: '',
+    district: 'Shillong',
+    description: '',
+    severity: 'High',
+  });
+
+  const fileInputRef = useRef(null);
   const { showToast } = useToast();
 
   const filteredReports = reports.filter((r) => {
@@ -33,6 +65,67 @@ export default function Reports() {
       setSelectedReport({ ...selectedReport, status: newStatus });
     }
     showToast(`Report #${id} marked as ${newStatus}`, 'success');
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const isVideo = file.type.startsWith('video/');
+    setUploadMediaType(isVideo ? 'video' : 'image');
+    setUploadFile(file);
+    setUploadPreview(URL.createObjectURL(file));
+  };
+
+  const handleUploadSubmit = async (e) => {
+    e.preventDefault();
+    if (!uploadFile) {
+      showToast('Please attach a photo or video from the incident site.', 'error');
+      return;
+    }
+
+    if (!newReportForm.reporterName.trim() || !newReportForm.location.trim()) {
+      showToast('Please fill in reporter name and location.', 'error');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Upload file to Supabase Storage 'incident-media' bucket
+      const uploadResult = await storageService.uploadMedia(uploadFile, 'reports');
+
+      const created = reportService.addReport({
+        reporterName: newReportForm.reporterName,
+        reporterContact: newReportForm.reporterContact || 'Unspecified',
+        location: `${newReportForm.location}, ${newReportForm.district}`,
+        district: newReportForm.district,
+        description: newReportForm.description,
+        photoUrl: uploadResult.publicUrl,
+        mediaType: uploadResult.mediaType,
+        severity: newReportForm.severity,
+      });
+
+      setReports(reportService.getReports());
+      showToast(`Media uploaded to 'incident-media' bucket and report #${created.id} logged!`, 'success');
+      
+      // Reset form
+      setIsUploadModalOpen(false);
+      setUploadFile(null);
+      setUploadPreview(null);
+      setNewReportForm({
+        reporterName: '',
+        reporterContact: '',
+        location: '',
+        district: 'Shillong',
+        description: '',
+        severity: 'High',
+      });
+    } catch (err) {
+      console.error('Upload failed:', err);
+      showToast(err.message || 'Failed to upload media to Supabase storage.', 'error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -71,26 +164,33 @@ export default function Reports() {
             Citizen & Field Incident Reports
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Review ground-level eyewitness accounts, crack reports, and verify field agent submissions
+            Review ground-level eyewitness accounts, uploaded media, and verify field agent submissions
           </p>
         </div>
 
-        {/* Filter Dropdown */}
-        <div className="flex items-center space-x-2">
-          <Filter className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Filter Status:
-          </span>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs font-medium bg-white border border-slate-200 rounded-xl px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-amber-500 text-slate-700 shadow-xs"
+        {/* Actions: Upload & Filter */}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="inline-flex items-center space-x-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-md shadow-amber-500/20"
           >
-            <option value="All">All Reports</option>
-            <option value="Pending">Pending</option>
-            <option value="Verified">Verified</option>
-            <option value="Rejected">Rejected</option>
-          </select>
+            <UploadCloud className="w-4 h-4" />
+            <span>Upload Incident Media</span>
+          </button>
+
+          <div className="flex items-center space-x-2">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="text-xs font-medium bg-white border border-slate-200 rounded-xl px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-amber-500 text-slate-700 shadow-xs"
+            >
+              <option value="All">All Reports</option>
+              <option value="Pending">Pending</option>
+              <option value="Verified">Verified</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -103,7 +203,7 @@ export default function Reports() {
                 <th className="px-6 py-4">Reporter</th>
                 <th className="px-6 py-4">Location</th>
                 <th className="px-6 py-4">Description</th>
-                <th className="px-6 py-4">Photo</th>
+                <th className="px-6 py-4">Media (Bucket)</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Submitted Date</th>
                 <th className="px-6 py-4 text-right">Actions</th>
@@ -130,14 +230,18 @@ export default function Reports() {
                   <td className="px-6 py-4">
                     <button
                       onClick={() => setSelectedReport(report)}
-                      className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 hover:opacity-80 transition bg-slate-100 flex items-center justify-center cursor-pointer"
-                      title="Click to view image"
+                      className="w-11 h-11 rounded-xl overflow-hidden border border-slate-200 hover:opacity-85 transition bg-slate-100 flex items-center justify-center cursor-pointer relative group"
+                      title="Click to view media"
                     >
-                      {report.photoUrl ? (
+                      {report.mediaType === 'video' ? (
+                        <div className="w-full h-full bg-slate-900 flex items-center justify-center text-amber-400">
+                          <Video className="w-5 h-5" />
+                        </div>
+                      ) : report.photoUrl ? (
                         <img
                           src={report.photoUrl}
                           alt="Hazard site"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       ) : (
                         <ImageIcon className="w-4 h-4 text-slate-400" />
@@ -182,6 +286,181 @@ export default function Reports() {
         </div>
       </div>
 
+      {/* Upload Modal to incident-media Bucket */}
+      {isUploadModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="relative bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setIsUploadModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mb-4">
+              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <UploadCloud className="w-5 h-5 text-amber-500" />
+                Upload Incident Media
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Upload photos or videos directly to the Supabase <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-slate-800">incident-media</code> public bucket
+              </p>
+            </div>
+
+            <form onSubmit={handleUploadSubmit} className="space-y-4">
+              {/* File Dropzone */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Attach Photo or Video (Max 50MB)
+                </label>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl p-4 text-center cursor-pointer transition bg-slate-50/50 hover:bg-amber-50/30"
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+
+                  {uploadPreview ? (
+                    <div className="space-y-2">
+                      {uploadMediaType === 'video' ? (
+                        <video
+                          src={uploadPreview}
+                          className="max-h-40 rounded-xl mx-auto"
+                          controls
+                        />
+                      ) : (
+                        <img
+                          src={uploadPreview}
+                          alt="Upload preview"
+                          className="max-h-40 rounded-xl mx-auto object-cover"
+                        />
+                      )}
+                      <p className="text-xs text-slate-600 font-medium">
+                        {uploadFile?.name} ({(uploadFile?.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                      <span className="text-[11px] text-amber-600 underline">
+                        Click to choose another file
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="py-4">
+                      <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-xs font-semibold text-slate-700">
+                        Click to select photo or video
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-1">
+                        JPG, PNG, WEBP, MP4, WEBM
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Reporter Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+                    Reporter Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Officer D. Lyngdoh"
+                    value={newReportForm.reporterName}
+                    onChange={(e) => setNewReportForm({ ...newReportForm, reporterName: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+                    Contact Phone
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="+91 98621 ..."
+                    value={newReportForm.reporterContact}
+                    onChange={(e) => setNewReportForm({ ...newReportForm, reporterContact: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Location & District */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+                    Specific Location
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Lower Mawlai Highway"
+                    value={newReportForm.location}
+                    onChange={(e) => setNewReportForm({ ...newReportForm, location: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+                    District
+                  </label>
+                  <select
+                    value={newReportForm.district}
+                    onChange={(e) => setNewReportForm({ ...newReportForm, district: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500 bg-white"
+                  >
+                    {DISTRICTS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+                  Incident Description
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Detail slope fissure, road subsidence, rockfall, or mudflow observations..."
+                  value={newReportForm.description}
+                  onChange={(e) => setNewReportForm({ ...newReportForm, description: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="pt-3 flex items-center justify-end space-x-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsUploadModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUploading}
+                  className="inline-flex items-center space-x-2 px-4 py-2 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-600 rounded-xl transition shadow-md shadow-amber-500/20 disabled:opacity-50"
+                >
+                  {isUploading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{isUploading ? 'Uploading to Supabase...' : 'Submit & Save Media'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* View Detail Modal */}
       {selectedReport && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -205,13 +484,21 @@ export default function Reports() {
               <div>{getStatusBadge(selectedReport.status)}</div>
             </div>
 
-            {/* Photo Preview */}
+            {/* Media Preview (Video or Photo) */}
             <div className="rounded-xl overflow-hidden border border-slate-200 mb-4 bg-slate-900 h-64 flex items-center justify-center">
-              <img
-                src={selectedReport.photoUrl}
-                alt="Full report preview"
-                className="w-full h-full object-cover"
-              />
+              {selectedReport.mediaType === 'video' ? (
+                <video
+                  src={selectedReport.photoUrl}
+                  controls
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <img
+                  src={selectedReport.photoUrl}
+                  alt="Full report preview"
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
 
             {/* Information Grid */}

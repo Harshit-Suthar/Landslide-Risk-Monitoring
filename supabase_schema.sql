@@ -88,3 +88,59 @@ values
   ('Baramura Hill Range', 'Agartala', 23.8315, 91.5645, 'Low', 'Stabilized roadside embankments with retaining walls intact.', 'Resolved', now() - interval '3 days'),
   ('Kangchup Foothills', 'Imphal', 24.8732, 93.8190, 'Medium', 'Seasonal stream overflow causing toe erosion at slope base.', 'Monitored', now() - interval '18 hours'),
   ('Tathangchen Ward', 'Gangtok', 27.3389, 98.6186, 'High', 'Perched water table causing pore pressure build-up along slope.', 'Monitored', now() - interval '4 hours');
+
+
+-- =========================================================
+-- 3. SUPABASE STORAGE (Public Bucket: incident-media)
+-- =========================================================
+
+-- Create the public bucket 'incident-media' if it does not already exist
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'incident-media',
+  'incident-media',
+  true,
+  52428800, -- 50MB limit per photo/video
+  array[
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'video/mp4',
+    'video/webm',
+    'video/quicktime'
+  ]
+)
+on conflict (id) do update set
+  public = true,
+  file_size_limit = 52428800,
+  allowed_mime_types = array[
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'video/mp4',
+    'video/webm',
+    'video/quicktime'
+  ];
+
+-- 1. Allow public read access to all files in incident-media bucket
+create policy "Public Access to Incident Media"
+  on storage.objects for select
+  using ( bucket_id = 'incident-media' );
+
+-- 2. Allow authenticated and public uploads to incident-media
+create policy "Allow Uploads to Incident Media"
+  on storage.objects for insert
+  with check ( bucket_id = 'incident-media' );
+
+-- 3. Allow updates to incident-media files
+create policy "Allow Updates to Incident Media"
+  on storage.objects for update
+  using ( bucket_id = 'incident-media' );
+
+-- 4. Allow deletion of incident-media files
+create policy "Allow Deletions of Incident Media"
+  on storage.objects for delete
+  using ( bucket_id = 'incident-media' );
+

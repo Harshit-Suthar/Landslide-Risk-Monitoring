@@ -43,12 +43,20 @@ export default function Home() {
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link
-              to="/student"
-              className="inline-flex items-center space-x-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-5 py-3 rounded-xl text-sm transition shadow-lg shadow-amber-500/25"
+              to="/citizen/home"
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold px-5 py-3 rounded-xl text-sm transition shadow-lg shadow-amber-500/25"
             >
-              <GraduationCap className="w-4 h-4" />
-              <span>Academic & Student Research Portal</span>
+              <ShieldAlert className="w-4 h-4" />
+              <span>Citizen Portal & Incident Reporting</span>
               <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <Link
+              to="/student"
+              className="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white font-medium px-4 py-3 rounded-xl text-sm border border-slate-700 transition"
+            >
+              <GraduationCap className="w-4 h-4 text-amber-400" />
+              <span>Research Portal</span>
             </Link>
           </div>
         </div>

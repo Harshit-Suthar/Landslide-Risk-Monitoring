@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldAlert, LogIn } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Users, Lock } from 'lucide-react';
 
 export default function Navbar() {
   return (
@@ -20,12 +20,29 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <nav className="flex items-center space-x-4">
+        <nav className="flex items-center space-x-2 sm:space-x-3">
+          <Link
+            to="/citizen/home"
+            className="flex items-center space-x-1.5 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3.5 py-1.5 rounded-lg transition shadow-xs"
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>Citizen Portal</span>
+          </Link>
+
           <Link
             to="/student"
-            className="flex items-center space-x-1.5 text-xs text-slate-300 hover:text-white font-medium px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-600 transition"
+            className="hidden sm:flex items-center space-x-1.5 text-xs text-slate-300 hover:text-white font-medium px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-600 transition"
           >
-            <span>Research & Students</span>
+            <span>Research</span>
+          </Link>
+
+          <Link
+            to="/admin/login"
+            className="flex items-center space-x-1 text-xs text-slate-400 hover:text-slate-200 px-2 py-1.5 rounded-lg transition"
+            title="Official Administrative Access"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Admin</span>
           </Link>
         </nav>
       </div>

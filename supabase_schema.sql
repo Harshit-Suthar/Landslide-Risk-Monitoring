@@ -139,8 +139,39 @@ create policy "Allow Updates to Incident Media"
   on storage.objects for update
   using ( bucket_id = 'incident-media' );
 
--- 4. Allow deletion of incident-media files
-create policy "Allow Deletions of Incident Media"
-  on storage.objects for delete
-  using ( bucket_id = 'incident-media' );
+-- =========================================================
+-- 4. REPORTS TABLE (Citizen & Field Incident Submissions)
+-- =========================================================
+create table if not exists public.reports (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  incident_type text not null check (incident_type in ('Landslide', 'Slope Crack', 'Road Blockage', 'Flooding', 'Other')),
+  latitude numeric(9,6),
+  longitude numeric(9,6),
+  district text not null,
+  description text not null,
+  media_url text,
+  severity text not null check (severity in ('Minor', 'Moderate', 'Severe')),
+  status text not null default 'Pending' check (status in ('Pending', 'Verified', 'Rejected')),
+  created_at timestamptz default timezone('utc'::text, now()) not null
+);
+
+-- Row Level Security (RLS) for reports
+alter table public.reports enable row level security;
+
+-- 1. Users can read their own reports or authenticated staff can read all
+create policy "Users can read own reports" on public.reports
+  for select using (auth.uid() = user_id or auth.uid() is not null);
+
+-- 2. Authenticated users can insert reports
+create policy "Authenticated users can insert reports" on public.reports
+  for insert with check (auth.uid() = user_id or auth.uid() is not null);
+
+-- 3. Allow update on reports (status updates by staff or author)
+create policy "Allow update reports" on public.reports
+  for update using (true);
+
+-- 4. Allow delete reports
+create policy "Allow delete reports" on public.reports
+  for delete using (auth.uid() = user_id or auth.uid() is not null);
 

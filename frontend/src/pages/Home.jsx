@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   ShieldAlert,
-  GraduationCap,
   PhoneCall,
   MapPin,
   CloudRain,
@@ -49,14 +48,6 @@ export default function Home() {
               <ShieldAlert className="w-4 h-4" />
               <span>Citizen Portal & Incident Reporting</span>
               <ArrowRight className="w-4 h-4" />
-            </Link>
-
-            <Link
-              to="/student"
-              className="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white font-medium px-4 py-3 rounded-xl text-sm border border-slate-700 transition"
-            >
-              <GraduationCap className="w-4 h-4 text-amber-400" />
-              <span>Research Portal</span>
             </Link>
           </div>
         </div>

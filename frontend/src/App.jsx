@@ -3,14 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Layouts
 import PublicLayout from './layouts/PublicLayout';
-import StudentLayout from './layouts/StudentLayout';
 import AdminLayout from './layouts/AdminLayout';
 import CitizenLayout from './layouts/CitizenLayout';
 
 // Public Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
-import StudentPortal from './pages/StudentPortal';
 
 // Citizen Auth & Pages
 import CitizenLogin from './pages/citizen/CitizenLogin';
@@ -52,10 +50,6 @@ export default function App() {
         <Route path="profile" element={<CitizenProfile />} />
       </Route>
 
-      {/* Student & Academic Portal */}
-      <Route element={<StudentLayout />}>
-        <Route path="/student" element={<StudentPortal />} />
-      </Route>
 
       {/* Protected Admin Console with AdminLayout */}
       <Route path="/admin" element={<AdminLayout />}>

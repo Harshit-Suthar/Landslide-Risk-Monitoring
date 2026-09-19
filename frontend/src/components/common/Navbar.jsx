@@ -29,12 +29,6 @@ export default function Navbar() {
             <span>Citizen Portal</span>
           </Link>
 
-          <Link
-            to="/student"
-            className="hidden sm:flex items-center space-x-1.5 text-xs text-slate-300 hover:text-white font-medium px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-600 transition"
-          >
-            <span>Research</span>
-          </Link>
 
           <Link
             to="/admin/login"

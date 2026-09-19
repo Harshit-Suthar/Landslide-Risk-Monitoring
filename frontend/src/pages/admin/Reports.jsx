@@ -18,6 +18,7 @@ import {
 import reportService from '../../services/reportService';
 import storageService from '../../services/storageService';
 import { useToast } from '../../layouts/AdminLayout';
+import Loading from '../../components/common/Loading';
 
 const DISTRICTS = [
   'Guwahati',
@@ -31,7 +32,8 @@ const DISTRICTS = [
 ];
 
 export default function Reports() {
-  const [reports, setReports] = useState(reportService.getReports());
+  const [reports, setReports] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedReport, setSelectedReport] = useState(null);
 
@@ -53,14 +55,33 @@ export default function Reports() {
   const fileInputRef = useRef(null);
   const { showToast } = useToast();
 
-  const filteredReports = reports.filter((r) => {
-    if (statusFilter === 'All') return true;
-    return r.status === statusFilter;
-  });
+  const loadReports = async () => {
+    setIsLoading(true);
+    try {
+      const data = await reportService.getReports();
+      setReports(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load reports:', err);
+      setReports([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleStatusChange = (id, newStatus) => {
-    reportService.updateReportStatus(id, newStatus);
-    setReports(reportService.getReports());
+  React.useEffect(() => {
+    loadReports();
+  }, []);
+
+  const filteredReports = Array.isArray(reports)
+    ? reports.filter((r) => {
+        if (statusFilter === 'All') return true;
+        return r.status === statusFilter;
+      })
+    : [];
+
+  const handleStatusChange = async (id, newStatus) => {
+    await reportService.updateReportStatus(id, newStatus);
+    await loadReports();
     if (selectedReport && selectedReport.id === id) {
       setSelectedReport({ ...selectedReport, status: newStatus });
     }
@@ -105,7 +126,7 @@ export default function Reports() {
         severity: newReportForm.severity,
       });
 
-      setReports(reportService.getReports());
+      await loadReports();
       showToast(`Media uploaded to 'incident-media' bucket and report #${created.id} logged!`, 'success');
       
       // Reset form
@@ -210,7 +231,28 @@ export default function Reports() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredReports.map((report) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center">
+                    <Loading message="Loading incident reports..." />
+                  </td>
+                </tr>
+              ) : filteredReports.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center py-6">
+                      <FileText className="w-10 h-10 text-slate-300 mb-2" />
+                      <p className="text-sm font-medium text-slate-700">No incident reports found</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {statusFilter !== 'All'
+                          ? `No reports matching status "${statusFilter}".`
+                          : 'No reports have been submitted yet.'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredReports.map((report) => (
                 <tr key={report.id} className="hover:bg-slate-50/70 transition">
                   <td className="px-6 py-4">
                     <div className="font-semibold text-slate-900">{report.reporterName}</div>
@@ -280,8 +322,9 @@ export default function Reports() {
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
+              ))
+            )}
+          </tbody>
           </table>
         </div>
       </div>

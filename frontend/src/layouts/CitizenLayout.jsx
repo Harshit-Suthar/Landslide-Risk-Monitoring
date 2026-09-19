@@ -82,7 +82,7 @@ export default function CitizenLayout() {
     try {
       await authService.signOut('citizen');
       showToast('You have been signed out.', 'info');
-      navigate('/citizen/login');
+      navigate('/login');
     } catch (err) {
       console.error('Logout failed:', err);
     }
@@ -98,7 +98,7 @@ export default function CitizenLayout() {
 
   // Route protection: redirect to login if no active session
   if (!session) {
-    return <Navigate to="/citizen/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   const user = session?.user;

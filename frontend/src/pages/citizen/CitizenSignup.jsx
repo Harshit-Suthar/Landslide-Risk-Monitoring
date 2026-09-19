@@ -240,7 +240,7 @@ export default function CitizenSignup() {
             <p className="text-xs text-slate-600">
               Already have an account?{' '}
               <Link
-                to="/citizen/login"
+                to="/login"
                 className="font-bold text-amber-600 hover:text-amber-700 hover:underline"
               >
                 Sign in here

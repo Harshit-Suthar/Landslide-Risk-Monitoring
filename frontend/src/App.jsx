@@ -11,7 +11,6 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 
 // Citizen Auth & Pages
-import CitizenLogin from './pages/citizen/CitizenLogin';
 import CitizenSignup from './pages/citizen/CitizenSignup';
 import CitizenHome from './pages/citizen/CitizenHome';
 import CitizenReport from './pages/citizen/CitizenReport';
@@ -35,8 +34,8 @@ export default function App() {
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/admin/login" element={<Login />} />
-        <Route path="/citizen/login" element={<CitizenLogin />} />
+        <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+        <Route path="/citizen/login" element={<Navigate to="/login" replace />} />
         <Route path="/citizen/signup" element={<CitizenSignup />} />
       </Route>
 

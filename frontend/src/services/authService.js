@@ -75,7 +75,9 @@ export const authService = {
         password,
       });
       if (error) throw error;
-      return data;
+      const detectedRole = data.user?.user_metadata?.role || 
+        (email.toLowerCase().includes('admin') || email.toLowerCase().includes('gov.in') ? 'Admin' : 'Citizen');
+      return { ...data, role: detectedRole };
     }
 
     // Fallback demo authentication for immediate evaluation
@@ -83,9 +85,11 @@ export const authService = {
       throw new Error('Email and password are required');
     }
 
-    const isCitizen = role === 'Citizen' || (!email.includes('admin') && !email.includes('gov.in'));
+    const isCitizen = role === 'Citizen' || 
+      (role !== 'Admin' && !email.toLowerCase().includes('admin') && !email.toLowerCase().includes('gov.in'));
 
     if (isCitizen) {
+      localStorage.removeItem(DEMO_ADMIN_KEY);
       const existing = localStorage.getItem(DEMO_CITIZEN_KEY);
       let sessionData;
       if (existing) {
@@ -115,10 +119,11 @@ export const authService = {
       }
       localStorage.setItem(DEMO_CITIZEN_KEY, JSON.stringify(sessionData));
       window.dispatchEvent(new Event('auth-state-change'));
-      return sessionData;
+      return { ...sessionData, role: 'Citizen' };
     }
 
     // Admin demo session
+    localStorage.removeItem(DEMO_CITIZEN_KEY);
     const adminSession = {
       user: {
         id: 'demo-admin-uuid-001',
@@ -133,7 +138,7 @@ export const authService = {
 
     localStorage.setItem(DEMO_ADMIN_KEY, JSON.stringify(adminSession));
     window.dispatchEvent(new Event('auth-state-change'));
-    return adminSession;
+    return { ...adminSession, role: 'Admin' };
   },
 
   /**

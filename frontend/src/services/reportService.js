@@ -174,7 +174,7 @@ export const reportService = {
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
 
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
           return data;
         }
         console.warn('Supabase getUserReports error, checking local store:', error?.message);
@@ -187,9 +187,9 @@ export const reportService = {
     const allReports = getStoredReports();
     if (!userId) return allReports;
 
-    // Filter by userId or return user-associated demo reports
+    // Filter by userId, fallback to demo user, or include reports submitted in this session
     const userReports = allReports.filter(
-      r => r.user_id === userId || r.user_id === 'citizen-demo-001'
+      r => r.user_id === userId || r.user_id === 'citizen-demo-001' || !r.user_id
     );
     return userReports.length > 0 ? userReports : allReports;
   },
@@ -230,6 +230,7 @@ export const reportService = {
 
   /**
    * Update report status (Verified, Rejected, Pending)
+   * When Verified, automatically promotes the report into Landslide Locations!
    */
   async updateReportStatus(id, newStatus) {
     if (isSupabaseConfigured && supabase) {
@@ -244,8 +245,49 @@ export const reportService = {
     }
 
     const current = getStoredReports();
-    const updated = current.map(r => (r.id === id ? { ...r, status: newStatus } : r));
+    let updatedReport = null;
+    const updated = current.map(r => {
+      if (r.id === id) {
+        updatedReport = { ...r, status: newStatus };
+        return updatedReport;
+      }
+      return r;
+    });
     saveStoredReports(updated);
+
+    // If verified, auto-promote to Landslide Locations so it appears in the Landslides tab
+    if (newStatus === 'Verified' && updatedReport) {
+      try {
+        const { landslideService } = await import('./landslideService');
+        const existingLocations = await landslideService.getLocations();
+        const alreadyExists = existingLocations.some(
+          loc => loc.report_id === id || loc.name?.includes(updatedReport.incident_type && updatedReport.district)
+        );
+
+        if (!alreadyExists) {
+          const riskLevel =
+            updatedReport.severity === 'Severe' || updatedReport.severity === 'Critical'
+              ? 'Critical'
+              : updatedReport.severity === 'Moderate'
+              ? 'High'
+              : 'Medium';
+
+          await landslideService.createLocation({
+            name: `${updatedReport.incident_type || 'Landslide'} Site (${updatedReport.district})`,
+            district: updatedReport.district || 'Shillong',
+            latitude: updatedReport.latitude || 25.5682,
+            longitude: updatedReport.longitude || 91.8933,
+            risk_level: riskLevel,
+            description: `Verified eyewitness report #${updatedReport.id}: ${updatedReport.description}`,
+            status: 'Monitored',
+            report_id: updatedReport.id,
+          });
+        }
+      } catch (promoteErr) {
+        console.warn('Could not auto-promote report to monitored locations:', promoteErr);
+      }
+    }
+
     return updated.find(r => r.id === id);
   },
 

@@ -89,7 +89,6 @@ export const authService = {
       (role !== 'Admin' && !email.toLowerCase().includes('admin') && !email.toLowerCase().includes('gov.in'));
 
     if (isCitizen) {
-      localStorage.removeItem(DEMO_ADMIN_KEY);
       const existing = localStorage.getItem(DEMO_CITIZEN_KEY);
       let sessionData;
       if (existing) {
@@ -123,7 +122,6 @@ export const authService = {
     }
 
     // Admin demo session
-    localStorage.removeItem(DEMO_CITIZEN_KEY);
     const adminSession = {
       user: {
         id: 'demo-admin-uuid-001',

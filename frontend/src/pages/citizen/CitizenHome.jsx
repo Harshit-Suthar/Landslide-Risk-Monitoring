@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -12,17 +12,34 @@ import {
   X,
   Bell,
   CheckCircle,
+  CheckCircle2,
+  XCircle,
   ExternalLink,
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import { reportService } from '../../services/reportService';
 
 export default function CitizenHome() {
   const context = useOutletContext() || {};
   const district = context.district || 'Shillong';
   const citizenName = context.citizenName || 'Citizen';
+  const user = context.user;
 
   const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [myRecentReports, setMyRecentReports] = useState([]);
+
+  useEffect(() => {
+    async function loadUserReports() {
+      try {
+        const reports = await reportService.getUserReports(user?.id);
+        setMyRecentReports(reports || []);
+      } catch (err) {
+        console.error('Failed to load user reports on home:', err);
+      }
+    }
+    loadUserReports();
+  }, [user?.id]);
 
   // Weather-linked risk forecasts per district (static mock data with severity)
   const weatherForecasts = {
@@ -298,6 +315,85 @@ export default function CitizenHome() {
           </Link>
         </div>
       </div>
+
+      {/* My Incident Reports Feed (Dashboard Overview) */}
+      {myRecentReports.length > 0 && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-slate-900 text-lg">
+                  My Incident Reports
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Live status of eyewitness reports you have submitted
+                </p>
+              </div>
+            </div>
+
+            <Link
+              to="/citizen/my-reports"
+              className="text-xs font-semibold text-amber-700 hover:text-amber-800 flex items-center space-x-1"
+            >
+              <span>View all ({myRecentReports.length})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-2">
+            {myRecentReports.slice(0, 3).map((rep) => {
+              const status = (rep.status || 'Pending').toLowerCase();
+              return (
+                <div
+                  key={rep.id}
+                  className="p-4 rounded-2xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition flex flex-col justify-between space-y-3"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                        {rep.incident_type || 'Incident'}
+                      </span>
+                      {status === 'verified' ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          Verified
+                        </span>
+                      ) : status === 'rejected' ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-200">
+                          <XCircle className="w-3 h-3 text-red-600" />
+                          Rejected
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                          <Clock className="w-3 h-3 text-amber-600" />
+                          Pending Review
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                      {rep.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-200/60 pt-2">
+                    <div className="flex items-center space-x-1">
+                      <MapPin className="w-3 h-3 text-amber-500" />
+                      <span className="truncate">{rep.district || district}</span>
+                    </div>
+                    <span className="text-amber-600 font-semibold text-[10px]">
+                      {rep.severity || 'Moderate'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Recent Alerts Section */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs">

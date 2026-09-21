@@ -6,6 +6,7 @@ const citizenRoutes = require('./citizenRoutes');
 const weatherRoutes = require('./weatherRoutes');
 const alertRoutes = require('./alertRoutes');
 const healthRoutes = require('./healthRoutes');
+const geotechRoutes = require('./geotechRoutes');
 
 // Mount routes
 router.use('/admin', adminRoutes);
@@ -13,6 +14,7 @@ router.use('/citizen', citizenRoutes);
 router.use('/weather', weatherRoutes);
 router.use('/alerts', alertRoutes);
 router.use('/health', healthRoutes);
+router.use('/geotech', geotechRoutes);
 
 // Public AI risk prediction endpoint for interactive simulators & citizen checks
 const mlProxyService = require('../services/mlProxyService');

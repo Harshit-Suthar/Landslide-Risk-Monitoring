@@ -15,8 +15,10 @@ import {
   CloudRain,
   ExternalLink,
   RefreshCw,
+  Mountain,
 } from 'lucide-react';
 import { landslideService } from '../../services/landslideService';
+import geotechService from '../../services/geotechService';
 import MapMarker from '../../components/map/MapMarker';
 import Loading from '../../components/common/Loading';
 
@@ -60,6 +62,34 @@ export default function LiveMap() {
   const [selectedDistrict, setSelectedDistrict] = useState('All Districts');
   const [activeRiskLevels, setActiveRiskLevels] = useState(['Critical', 'High', 'Medium', 'Low']);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedGeotech, setSelectedGeotech] = useState(null);
+  const [loadingGeotech, setLoadingGeotech] = useState(false);
+
+  useEffect(() => {
+    if (!selectedLocation) {
+      setSelectedGeotech(null);
+      return;
+    }
+    let isCancelled = false;
+    setLoadingGeotech(true);
+    geotechService.getTelemetry(
+      selectedLocation.id,
+      selectedLocation.latitude,
+      selectedLocation.longitude,
+      85.0
+    ).then((data) => {
+      if (!isCancelled) {
+        setSelectedGeotech(data);
+        setLoadingGeotech(false);
+      }
+    }).catch(() => {
+      if (!isCancelled) setLoadingGeotech(false);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedLocation]);
 
   const fetchLocations = async () => {
     setIsLoading(true);
@@ -322,6 +352,27 @@ export default function LiveMap() {
                 <span>GPS: {selectedLocation.latitude.toFixed(4)}° N, {selectedLocation.longitude.toFixed(4)}° E</span>
                 <span>Status: {selectedLocation.status}</span>
               </div>
+
+              {/* Live Geotechnical Sensor Telemetry Bar */}
+              {selectedGeotech && (
+                <div className="mt-2.5 pt-2 border-t border-slate-800 flex flex-wrap items-center gap-3 text-2xs">
+                  <span className="flex items-center gap-1 font-bold text-amber-400">
+                    <Mountain className="w-3 h-3" /> Geotech API Telemetry:
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono text-slate-200">
+                    FoS: <strong className={selectedGeotech.factor_of_safety < 1.0 ? 'text-red-400' : selectedGeotech.factor_of_safety < 1.25 ? 'text-amber-400' : 'text-emerald-400'}>{selectedGeotech.factor_of_safety}</strong>
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono text-slate-200">
+                    Pore Pressure: <strong className="text-sky-300">{selectedGeotech.pore_water_pressure_kpa} kPa</strong>
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono text-slate-200">
+                    Inclinometer Creep: <strong className="text-purple-300">{selectedGeotech.inclinometer_shear_displacement_mm} mm</strong>
+                  </span>
+                  <span className="text-slate-400 truncate max-w-xs font-sans">
+                    Strata: <span className="text-slate-300">{selectedGeotech.rock_strata}</span>
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-3">

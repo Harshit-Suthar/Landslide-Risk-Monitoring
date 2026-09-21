@@ -1,4 +1,4 @@
-// Service for AI Model Predictions (Real ML Service integration with explainability)
+import geotechService from './geotechService';
 
 export const predictionService = {
   getModelInfo() {
@@ -19,6 +19,8 @@ export const predictionService = {
       { name: 'Volumetric Soil Moisture', value: 'Satellite SAR (%)', threshold: '> 70%: elevated pore-water pressure' },
       { name: 'Slope Escarpment Angle', value: 'SRTM 30m DEM (°)', threshold: '> 35°: high gravitational shear' },
       { name: 'Historical Landslide Frequency', value: 'GSI 10-Yr Registry', threshold: '> 3 events: chronic instability' },
+      { name: 'Factor of Safety (FoS)', value: 'Limit Equilibrium (c\' & phi\')', threshold: '< 1.0: Active slip failure' },
+      { name: 'Pore-Water Pressure', value: 'Vibrating Wire Piezometer (kPa)', threshold: '> 35 kPa: hydraulic liquefaction' }
     ];
   },
 
@@ -76,9 +78,19 @@ export const predictionService = {
   },
 
   /**
+   * Geotechnical Telemetry direct access
+   */
+  async getGeotechTelemetry(locationId = 'loc-1', lat = 25.5682, lon = 91.8933, rainfallMm = 85.0) {
+    return geotechService.getTelemetry(locationId, lat, lon, rainfallMm);
+  },
+
+  /**
    * Runs live AI risk calculation by invoking the FastAPI ML microservice via backend proxy
+   * and merges geotechnical telemetry for unified engineering assessment.
    */
   async runLivePrediction({ location_id = 'loc-custom', lat = 25.5788, lon = 91.8933, rainfall_mm = 90.0 }) {
+    let predictionResult = null;
+
     try {
       const res = await fetch('/api/predict', {
         method: 'POST',
@@ -94,7 +106,7 @@ export const predictionService = {
       if (res.ok) {
         const json = await res.json();
         if (json.data) {
-          return {
+          predictionResult = {
             risk_level: json.data.risk_level,
             confidence: Math.round(json.data.confidence * 1000) / 10,
             contributing_factors: json.data.contributing_factors || [],
@@ -107,67 +119,81 @@ export const predictionService = {
       console.warn('Backend proxy predict failed, trying direct ML service fallback:', err);
     }
 
-    // Direct fallback to ML service if proxy is unavailable
-    try {
-      const directRes = await fetch('http://127.0.0.1:8000/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location_id,
-          lat: parseFloat(lat),
-          lon: parseFloat(lon),
-          rainfall_mm: parseFloat(rainfall_mm)
-        })
-      });
+    if (!predictionResult) {
+      // Direct fallback to ML service if proxy is unavailable
+      try {
+        const directRes = await fetch('http://127.0.0.1:8000/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location_id,
+            lat: parseFloat(lat),
+            lon: parseFloat(lon),
+            rainfall_mm: parseFloat(rainfall_mm)
+          })
+        });
 
-      if (directRes.ok) {
-        const data = await directRes.json();
-        return {
-          risk_level: data.risk_level,
-          confidence: Math.round(data.confidence * 1000) / 10,
-          contributing_factors: data.contributing_factors || [],
-          inputs_used: data.inputs_used,
-          source: 'Direct ML Service'
-        };
+        if (directRes.ok) {
+          const data = await directRes.json();
+          predictionResult = {
+            risk_level: data.risk_level,
+            confidence: Math.round(data.confidence * 1000) / 10,
+            contributing_factors: data.contributing_factors || [],
+            inputs_used: data.inputs_used,
+            source: 'Direct ML Service'
+          };
+        }
+      } catch (err) {
+        console.warn('Direct ML predict failed, calculating client-side heuristic:', err);
       }
-    } catch (err) {
-      console.warn('Direct ML predict failed, calculating client-side heuristic:', err);
     }
 
-    // Client-side deterministic heuristic fallback if offline
-    const rain = parseFloat(rainfall_mm) || 50;
-    let risk = 'Low';
-    let conf = 78.5;
-    let factors = ['Hydrological indicators within standard seasonal thresholds.'];
+    if (!predictionResult) {
+      // Client-side deterministic heuristic fallback if offline
+      const rain = parseFloat(rainfall_mm) || 50;
+      let risk = 'Low';
+      let conf = 78.5;
+      let factors = ['Hydrological indicators within standard seasonal thresholds.'];
 
-    if (rain > 130) {
-      risk = 'Critical';
-      conf = 92.4;
-      factors = [
-        `Extreme downpour (${rain} mm/24h) triggering catastrophic pore pressure`,
-        'Escarpment instability above critical threshold angle',
-        'High antecedent ground saturation detected'
-      ];
-    } else if (rain > 80) {
-      risk = 'High';
-      conf = 85.0;
-      factors = [
-        `Heavy precipitation (${rain} mm/24h) approaching saturation limit`,
-        'Slope movement telemetry shows active creep'
-      ];
-    } else if (rain > 40) {
-      risk = 'Medium';
-      conf = 79.2;
-      factors = [`Moderate rainfall (${rain} mm/24h), routine monitoring advised`];
+      if (rain > 130) {
+        risk = 'Critical';
+        conf = 92.4;
+        factors = [
+          `Extreme downpour (${rain} mm/24h) triggering catastrophic pore pressure`,
+          'Escarpment instability above critical threshold angle',
+          'High antecedent ground saturation detected'
+        ];
+      } else if (rain > 80) {
+        risk = 'High';
+        conf = 85.0;
+        factors = [
+          `Heavy precipitation (${rain} mm/24h) approaching saturation limit`,
+          'Slope movement telemetry shows active creep'
+        ];
+      } else if (rain > 40) {
+        risk = 'Medium';
+        conf = 79.2;
+        factors = [`Moderate rainfall (${rain} mm/24h), routine monitoring advised`];
+      }
+
+      predictionResult = {
+        risk_level: risk,
+        confidence: conf,
+        contributing_factors: factors,
+        inputs_used: { location_id, lat, lon, rainfall_mm: rain },
+        source: 'Internal Calibrated Model'
+      };
     }
 
-    return {
-      risk_level: risk,
-      confidence: conf,
-      contributing_factors: factors,
-      inputs_used: { location_id, lat, lon, rainfall_mm: rain },
-      source: 'Internal Calibrated Model'
-    };
+    // Attach real-time Geotechnical telemetry
+    try {
+      const geotech = await geotechService.getTelemetry(location_id, lat, lon, rainfall_mm);
+      predictionResult.geotech = geotech;
+    } catch (gErr) {
+      console.warn('Geotech telemetry fetch failed:', gErr);
+    }
+
+    return predictionResult;
   },
 
   async triggerPrediction() {
@@ -181,3 +207,4 @@ export const predictionService = {
 };
 
 export default predictionService;
+

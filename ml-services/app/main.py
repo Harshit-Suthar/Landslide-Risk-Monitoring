@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import ALLOWED_ORIGINS, MODEL_VERSION
 from app.routers.health import router as health_router
 from app.routers.predict import router as predict_router
+from app.routers.geotech import router as geotech_router
 
 app = FastAPI(
     title="NER Landslide Early Warning - ML Service",
@@ -22,6 +23,7 @@ app.add_middleware(
 # Mount endpoints
 app.include_router(health_router)
 app.include_router(predict_router)
+app.include_router(geotech_router)
 
 @app.get("/")
 def root():
@@ -31,7 +33,8 @@ def root():
         "version": MODEL_VERSION,
         "docs": "/docs",
         "health": "/health",
-        "predict": "/predict (POST)"
+        "predict": "/predict (POST)",
+        "geotech": "/geotech/{location_id} (GET), /geotech/analyze (POST)"
     }
 
 if __name__ == "__main__":

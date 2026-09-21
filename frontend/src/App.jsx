@@ -9,6 +9,11 @@ import CitizenLayout from './layouts/CitizenLayout';
 // Public Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
+import LiveMap from './pages/public/LiveMap';
+import WeatherRadar from './pages/public/WeatherRadar';
+import AlertsBulletin from './pages/public/AlertsBulletin';
+import SafetyGuide from './pages/public/SafetyGuide';
+import About from './pages/public/About';
 
 // Citizen Auth & Pages
 import CitizenSignup from './pages/citizen/CitizenSignup';
@@ -33,6 +38,11 @@ export default function App() {
       {/* Public Pages with PublicLayout */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/map" element={<LiveMap />} />
+        <Route path="/weather" element={<WeatherRadar />} />
+        <Route path="/alerts" element={<AlertsBulletin />} />
+        <Route path="/safety" element={<SafetyGuide />} />
+        <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin/login" element={<Navigate to="/login" replace />} />
         <Route path="/citizen/login" element={<Navigate to="/login" replace />} />

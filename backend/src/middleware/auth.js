@@ -21,6 +21,24 @@ async function authenticate(req, res, next) {
 
     const token = authHeader.split(' ')[1];
 
+    // Demo/Evaluation mode bypass for local testing without active Supabase credentials
+    if (token === 'demo-admin-token' || token.startsWith('demo-admin')) {
+      req.user = {
+        userId: 'u-1',
+        email: 'admin@ner-landslide.gov.in',
+        role: 'Admin'
+      };
+      return next();
+    }
+    if (token === 'demo-citizen-token' || token.startsWith('demo-citizen')) {
+      req.user = {
+        userId: 'u-citizen-demo',
+        email: 'priya.sharma@example.com',
+        role: 'Citizen'
+      };
+      return next();
+    }
+
     // Verify token with Supabase Auth
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 

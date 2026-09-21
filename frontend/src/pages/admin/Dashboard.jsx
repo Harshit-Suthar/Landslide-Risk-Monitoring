@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertTriangle,
   Flame,
@@ -7,13 +7,36 @@ import {
   MapPin,
   ArrowUpRight,
   ShieldAlert,
+  Layers,
+  Filter,
 } from 'lucide-react';
 import AdminStatCard from '../../components/admin/AdminStatCard';
 import RiskSummary from '../../components/dashboard/RiskSummary';
 import RecentEvents from '../../components/dashboard/RecentEvents';
+import RiskMap from '../../components/map/RiskMap';
+import { landslideService } from '../../services/landslideService';
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
+  const [locations, setLocations] = useState([]);
+  const [selectedDistrict, setSelectedDistrict] = useState('All');
+
+  useEffect(() => {
+    async function loadLocations() {
+      try {
+        const data = await landslideService.getLocations();
+        setLocations(data || []);
+      } catch (err) {
+        console.error('Failed to load locations in dashboard:', err);
+      }
+    }
+    loadLocations();
+  }, []);
+
+  const filteredLocations = locations.filter(
+    (l) => selectedDistrict === 'All' || l.district === selectedDistrict
+  );
+
   return (
     <div className="space-y-6">
       {/* Page Title & Status */}
@@ -32,7 +55,7 @@ export default function Dashboard() {
             to="/admin/risk-management"
             className="inline-flex items-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-xs"
           >
-            <span>Open Live Risk Map</span>
+            <span>Open Dedicated GIS Console</span>
             <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>
@@ -84,23 +107,48 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Placeholder Card: Risk Map (coming in next phase) */}
-      <div className="w-full h-[400px] border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center p-8 text-center bg-slate-50/50 hover:bg-slate-50 transition">
-        <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-4 shadow-xs">
-          <MapPin className="w-8 h-8 text-slate-400 stroke-[1.75]" />
+      {/* Live Operational Risk Map Card */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <h3 className="font-bold text-slate-900 text-base flex items-center space-x-2">
+              <Layers className="w-4 h-4 text-amber-500" />
+              <span>Live Operational Geospatial Telemetry</span>
+            </h3>
+            <p className="text-xs text-slate-500">
+              Interactive OpenStreetMap tracking {filteredLocations.length} monitored slope installations
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <select
+              value={selectedDistrict}
+              onChange={(e) => setSelectedDistrict(e.target.value)}
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700"
+            >
+              <option value="All">All Districts</option>
+              <option value="Shillong">Shillong</option>
+              <option value="Kohima">Kohima</option>
+              <option value="Aizawl">Aizawl</option>
+              <option value="Guwahati">Guwahati</option>
+              <option value="Itanagar">Itanagar</option>
+              <option value="Gangtok">Gangtok</option>
+              <option value="Imphal">Imphal</option>
+            </select>
+
+            <Link
+              to="/admin/risk-management"
+              className="text-xs font-bold text-amber-600 hover:text-amber-700 underline"
+            >
+              Full GIS View &rarr;
+            </Link>
+          </div>
         </div>
-        <h3 className="text-lg font-bold text-slate-800">
-          Risk Map (coming in next phase)
-        </h3>
-        <p className="text-xs text-slate-500 max-w-md mt-1.5 leading-relaxed">
-          Interactive GIS overlay with live satellite precipitation, slope displacement radar, and drone survey point clouds is scheduled for release in Phase 2.
-        </p>
-        <Link
-          to="/admin/risk-management"
-          className="mt-4 text-xs font-semibold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-4 py-2 rounded-xl transition border border-amber-200"
-        >
-          View Current Interactive GIS Map &rarr;
-        </Link>
+
+        {/* Embedded Map Component */}
+        <div className="h-[380px] rounded-2xl overflow-hidden border border-slate-200">
+          <RiskMap locations={filteredLocations} height="380px" />
+        </div>
       </div>
     </div>
   );

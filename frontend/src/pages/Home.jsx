@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import {
   ShieldAlert,
@@ -22,6 +22,7 @@ import {
   Users,
   Eye,
   RefreshCw,
+  BellRing,
 } from 'lucide-react';
 import MapMarker from '../components/map/MapMarker';
 import { landslideService } from '../services/landslideService';
@@ -72,6 +73,9 @@ const RECENT_INCIDENTS = [
 ];
 
 export default function Home() {
+  const context = useOutletContext() || {};
+  const openEmergencyAlert = context.openEmergencyAlert;
+
   const [locations, setLocations] = useState([]);
   const [selectedMapDistrict, setSelectedMapDistrict] = useState('All');
   const [weatherRainfall, setWeatherRainfall] = useState(90.8);
@@ -173,6 +177,15 @@ export default function Home() {
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => openEmergencyAlert && openEmergencyAlert()}
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-black px-5 py-3.5 rounded-2xl text-xs sm:text-sm transition shadow-lg shadow-red-500/25 cursor-pointer"
+            >
+              <BellRing className="w-4 h-4 animate-bounce" />
+              <span>Urgent Alert Pop-Up</span>
+            </button>
+
             <Link
               to="/map"
               className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black px-5 py-3.5 rounded-2xl text-xs sm:text-sm transition shadow-lg shadow-amber-500/25"
@@ -187,7 +200,7 @@ export default function Home() {
               className="inline-flex items-center space-x-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold px-5 py-3.5 rounded-2xl text-xs sm:text-sm transition"
             >
               <AlertTriangle className="w-4 h-4 text-amber-400" />
-              <span>Report Citizen Incident</span>
+              <span>Report Incident</span>
             </Link>
 
             <Link

@@ -16,7 +16,7 @@ import {
   Shield,
 } from 'lucide-react';
 
-export default function Navbar() {
+export default function Navbar({ onOpenEmergencyAlert }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -39,22 +39,33 @@ export default function Navbar() {
       {/* Top Emergency Advisory Strip */}
       <div className="bg-gradient-to-r from-red-700 via-rose-700 to-red-800 text-white text-2xs sm:text-xs py-1.5 px-4 font-semibold border-b border-red-800/60">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2 truncate">
+          <button
+            type="button"
+            onClick={onOpenEmergencyAlert}
+            className="flex items-center space-x-2 truncate hover:opacity-90 transition text-left cursor-pointer"
+          >
             <span className="flex h-2 w-2 relative flex-shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-300"></span>
             </span>
             <span className="truncate">
-              <strong>MONSOON ADVISORY:</strong> Active slope displacement alerts active in Kohima (NH-29) & Aizawl (Durtlang). Heavy rainfall band over Shillong plateau.
+              <strong>MONSOON ADVISORY:</strong> Active slope displacement in Kohima & Aizawl. <u>Click to open Emergency Warning Pop-Up &rarr;</u>
             </span>
-          </div>
+          </button>
 
           <div className="hidden sm:flex items-center space-x-3 flex-shrink-0 ml-3">
+            <button
+              type="button"
+              onClick={onOpenEmergencyAlert}
+              className="px-2 py-0.5 rounded-md bg-white/20 hover:bg-white/30 text-white font-bold text-3xs transition cursor-pointer"
+            >
+              ⚠️ Emergency Pop-Up
+            </button>
             <Link
               to="/alerts"
               className="text-amber-200 hover:text-white underline font-bold transition"
             >
-              View Bulletins &rarr;
+              Bulletins
             </Link>
             <span className="text-red-300">|</span>
             <span className="flex items-center space-x-1 text-white">

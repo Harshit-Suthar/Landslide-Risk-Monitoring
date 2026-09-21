@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Send,
   ExternalLink,
+  BellRing,
 } from 'lucide-react';
 
 const INITIAL_ALERTS = [
@@ -111,6 +112,9 @@ const INITIAL_ALERTS = [
 ];
 
 export default function AlertsBulletin() {
+  const context = useOutletContext() || {};
+  const openEmergencyAlert = context.openEmergencyAlert;
+
   const [alerts, setAlerts] = useState(INITIAL_ALERTS);
   const [selectedTier, setSelectedTier] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -152,7 +156,16 @@ export default function AlertsBulletin() {
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => openEmergencyAlert && openEmergencyAlert()}
+            className="inline-flex items-center space-x-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+          >
+            <BellRing className="w-3.5 h-3.5 animate-bounce" />
+            <span>Open Emergency Pop-Up Alert Box</span>
+          </button>
+
           <Link
             to="/citizen/report"
             className="inline-flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs"
@@ -318,7 +331,35 @@ export default function AlertsBulletin() {
                       <span>Control Room Toll-Free: <strong>1070</strong> (State EOC)</span>
                     </div>
 
-                    <div className="flex items-center space-x-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (openEmergencyAlert) {
+                            openEmergencyAlert({
+                              id: alt.id,
+                              tier: alt.tier.toUpperCase(),
+                              hazard: alt.title,
+                              location: `${alt.district}, ${alt.state}`,
+                              timestamp: alt.timestamp,
+                              issuedBy: alt.issuedBy,
+                              description: alt.description,
+                              instructions: [
+                                alt.actionRequired,
+                                'Avoid the affected highway corridor and monitor local meteorological updates.',
+                                'Keep emergency contact numbers handy (State EOC Dial 1070).'
+                              ],
+                              helpline: '1070',
+                              deocPhone: '0370-2291120 / 0389-2335842',
+                            });
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-700 font-bold flex items-center space-x-1 cursor-pointer transition"
+                      >
+                        <BellRing className="w-3.5 h-3.5" />
+                        <span>Pop-Up Alert Box</span>
+                      </button>
+
                       <Link
                         to="/map"
                         className="text-slate-700 hover:text-slate-900 font-semibold flex items-center space-x-1"

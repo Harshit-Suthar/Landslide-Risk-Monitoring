@@ -4,11 +4,15 @@ dist/
 
 # Environment files
 .env
+.env.*
 .env.local
 .env.*.local
 frontend/.env
-frontend/.env.local
-frontend/.env.*.local
+frontend/.env.*
+backend/.env
+backend/.env.*
+ml-services/.env
+ml-services/.env.*
 
 # Logs
 *.log

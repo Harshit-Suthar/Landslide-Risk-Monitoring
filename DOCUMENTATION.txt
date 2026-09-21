@@ -1,321 +1,97 @@
 ================================================================================
-       LANDSLIDE EARLY WARNING & RISK MONITORING SYSTEM (NER)
-       Complete System Guide: Workflows, Flowchart, Tech Stack & APIs
+NER Landslide Early Warning & Risk Monitoring System
+Complete Beginner-Friendly System Guide: Features, Workflows, APIs & Setup
 ================================================================================
 
+1. WHAT IS THIS PROJECT IN SIMPLE WORDS?
 --------------------------------------------------------------------------------
-1. WHAT IS THIS PROJECT?
+In the hilly North Eastern States of India (such as Meghalaya, Assam, Mizoram, 
+Nagaland, Arunachal Pradesh, Sikkim, Manipur, and Tripura), heavy monsoon rains 
+frequently trigger dangerous landslides and road blockages. 
+
+This platform is a smart early warning web system. It combines satellite imagery, 
+ground moisture sensors, and Artificial Intelligence (AI) to predict landslides 
+before they happen and immediately warn people so they can safely evacuate in time.
+
+Key Features:
+- Citizen Incident Reporting: Take a photo of a crack or landslide, tag GPS, and send to authorities.
+- Officer Verification: Control room staff review photos and click Verify or Reject.
+- Smart AI Risk Prediction: Checks rainfall, soil wetness, slope angle, and past history.
+- Emergency Pop-Up Alert Box: Red alert box pops up on screen with instructions and direct 1070 helpline call.
+- Public Live GIS Map & Radar: Anyone can view live hazard pins and 7-day weather forecasts without signing in.
+
+
+2. HOW THE COMPLETE SYSTEM WORKS (END-TO-END WORKFLOW)
 --------------------------------------------------------------------------------
-The Landslide Early Warning & Risk Monitoring System is a web platform built 
-to protect people living in the hilly areas of North East India (such as 
-Meghalaya, Assam, Mizoram, Nagaland, and Arunachal Pradesh).
-
-In these regions, heavy rainfall during monsoon seasons frequently triggers 
-dangerous landslides and road blockages. This platform solves that problem by:
-
-  * Allowing Citizens to Report Incidents: 
-    Anyone can take a picture of a landslide or road crack, tag their GPS 
-    location, and send it immediately to authorities.
-
-  * Helping Officers Verify Reports: 
-    Disaster management teams can review the photos and confirm whether the 
-    danger is real.
-
-  * Using AI to Predict Landslide Risk: 
-    The system looks at current rainfall, soil wetness, how steep the mountain 
-    is, and past landslide history to calculate a risk level 
-    (Low, Medium, High, or Critical).
-
-  * Sending Instant Emergency Alerts: 
-    If a landslide is confirmed or risk is critical, the system sends SMS 
-    warnings and push notifications to residents and district officers.
+Step 1: Rain & Ground Sensors measure soil saturation every 15 minutes.
+Step 2: Citizens spot danger and submit reports with photos and GPS.
+Step 3: Incident is saved in database with status 'Pending'.
+Step 4: Emergency control room officers review and click 'Verify'.
+Step 5: AI calculates the landslide risk level: Low, Medium, High, or Critical.
+Step 6: Emergency Pop-Up Alert Box, SMS, and warnings are dispatched to the public.
+Step 7: Live GIS Map updates with danger pins and evacuation shelter routes.
 
 
+3. GUIDE TO ALL PAGES ON THE WEBSITE
 --------------------------------------------------------------------------------
-2. HOW THE SYSTEM WORKS (END-TO-END WORKFLOW)
+A. Public Pages (No Login Required):
+- Home Page (/): Live alert marquee, sensor counters, 8-state hazard index, interactive map preview, live weather widget, and interactive AI risk simulator.
+- Live GIS Risk Map (/map): Full-screen map with Critical, High, Medium, Low pins, search, and district filters.
+- Weather Radar (/weather): 24h rain gauges for all 8 state capitals, soil wetness ratio, and 7-day forecast.
+- Emergency Alerts Bulletin (/alerts): Noticeboard for Red/Orange/Yellow warnings with 1-click Pop-Up Alert triggers.
+- Safety & Evacuation Guide (/safety): 6 early warning indicators, 3-step action guide, and interactive 72-hour Go-Bag checklist.
+- About the System (/about): Sensor network explainer (piezometers, inclinometers, radar, satellites) and partners.
+
+B. Citizen Portal:
+- Citizen Report (/citizen/report): Submit photos, GPS, and severity of new incidents.
+- My Reports (/citizen/my-reports): Track submitted reports.
+- Citizen Map (/citizen/map): District-specific hazard map.
+
+C. Admin Console:
+- Dashboard (/admin/dashboard): Active alerts, reports today, and operational live map.
+- AI Model Console (/admin/ai-model): Live Prediction Workbench to test slope locations against the Python AI service.
+- Reports (/admin/reports): Review and verify public submissions.
+- Users (/admin/users): Manage officers and field staff.
+
+
+4. TECHNOLOGY STACK
 --------------------------------------------------------------------------------
-
-Here is the complete step-by-step flowchart showing how the system operates 
-from the moment an incident occurs to when alerts are dispatched:
-
-+--------------------------------------------------------------------------+
-| 1. Incident Happens / Danger Detected                                    |
-|    (Landslide, hill slope crack, road blockage, or heavy downpour)       |
-+--------------------------------------------------------------------------+
-                                    |
-                                    v
-+--------------------------------------------------------------------------+
-| 2. Citizen or Field Agent Reports                                        |
-|    - Takes photo or video evidence                                       |
-|    - Captures exact GPS location (latitude & longitude)                  |
-|    - Submits report form via the website                                 |
-+--------------------------------------------------------------------------+
-                                    |
-                                    v
-+--------------------------------------------------------------------------+
-| 3. Photo & Data Saved Securely                                           |
-|    - Photo uploaded to cloud media storage                               |
-|    - Incident details saved in database with status 'Pending'            |
-+--------------------------------------------------------------------------+
-                                    |
-                                    v
-+--------------------------------------------------------------------------+
-| 4. Control Room Gets Notified Instantly                                  |
-|    - Central disaster team receives email and dashboard notification     |
-+--------------------------------------------------------------------------+
-                                    |
-                                    v
-+--------------------------------------------------------------------------+
-| 5. Officer Reviews & Triages Report                                      |
-|    - Inspects photos, checks coordinates on map, verifies severity       |
-+--------------------------------------------------------------------------+
-                  /                                    \
-       [If False / Duplicate]                    [If Real Danger]
-                /                                        \
-               v                                          v
-    +-----------------------+                  +-----------------------+
-    | Mark as 'Rejected'    |                  | Mark as 'Verified'    |
-    | (No alerts dispatched)|                  | (Incident confirmed)  |
-    +-----------------------+                  +-----------------------+
-                                                          |
-                                                          v
-+--------------------------------------------------------------------------+
-| 6. Run AI Risk Calculation                                               |
-|    - Checks 24-hour rainfall in millimeters                              |
-|    - Checks soil moisture / ground water saturation                      |
-|    - Checks mountain slope inclination angle                             |
-|    - Checks historical landslide records in that area                    |
-+--------------------------------------------------------------------------+
-                                    |
-                                    v
-+--------------------------------------------------------------------------+
-| 7. System Determines Hazard Level                                        |
-|    (Low | Medium | High | Critical)                                      |
-+--------------------------------------------------------------------------+
-                                    |
-                                    v
-+--------------------------------------------------------------------------+
-| 8. Send Emergency Warnings                                               |
-|    - SMS messages sent to residents in the affected district             |
-|    - Web push notifications sent to smartphones and browsers             |
-|    - Priority emails sent to District Disaster Management Officers       |
-+--------------------------------------------------------------------------+
-                                    |
-                                    v
-+--------------------------------------------------------------------------+
-| 9. Live Map & Dashboard Updates                                          |
-|    - Displays colored danger pin on interactive map                      |
-|    - Updates live statistics and charts for government officials         |
-+--------------------------------------------------------------------------+
-
-................................................................................
-Detailed Step-by-Step Sub-Workflows:
-................................................................................
-
-A. Citizen Reporting Workflow:
-   1. A citizen or field agent opens the "Report Incident" page on their mobile 
-      or desktop browser.
-   2. They select what happened (Landslide, Slope Crack, Road Blockage, or 
-      Flooding) and select the severity (Minor, Moderate, Severe).
-   3. The device GPS automatically detects the exact latitude and longitude.
-   4. They attach a photo or video as evidence.
-   5. Clicking "Submit" uploads the photo to cloud storage and creates the 
-      report in the database with status "Pending".
-   6. A notification is sent automatically to the emergency control room.
-
-B. Officer Verification Workflow:
-   1. The disaster response officer logs into the Admin Console and opens the 
-      "Reports" screen.
-   2. They see incoming citizen submissions waiting for review.
-   3. The officer checks the photo evidence, map location, and description.
-   4. If genuine, the officer clicks "Verify" (or "Reject" if false/duplicate).
-   5. Once verified, the database updates to "Verified" and alerts are triggered.
-
-C. AI Risk Prediction Workflow:
-   1. The system or officer triggers a risk prediction for a specific hill or 
-      district.
-   2. The AI model evaluates 4 key factors:
-      * Rainfall (35% weight): Amount of rain fallen in the last 24 hours.
-      * Soil Wetness (25% weight): How saturated the ground is with water.
-      * Hill Slope (25% weight): How steep the mountain gradient is.
-      * Past History (15% weight): Number of past landslides in that zone.
-   3. The model outputs a composite hazard tier:
-      * Low: Safe conditions.
-      * Medium: Caution advised; monitor rainfall.
-      * High: Dangerous; potential slope instability.
-      * Critical: Extreme danger; evacuation/road closure recommended.
-   4. It provides plain-language explanations of why the score was assigned.
-
-D. Emergency Alert Workflow:
-   1. When an incident is verified or risk is Critical, alerts are dispatched.
-   2. The system sends:
-      * SMS: Direct text message to mobile numbers in the district.
-      * Web Push: Pop-up notification on subscribed phones/browsers.
-      * Email: Formal alert sent to District Disaster Management Authorities.
+- Frontend: React + Vite + Tailwind CSS (Fast, responsive website)
+- Maps: Leaflet + OpenStreetMap (Live interactive GIS mapping)
+- Backend API: Node.js + Express (Handles requests, notifications, and weather on port 5000)
+- AI / Machine Learning: Python + FastAPI (Hazard calculation engine on port 8000)
+- Database & Storage: Supabase PostgreSQL (Stores users, locations, reports, and media)
 
 
+5. APIS USED IN THE SYSTEM
 --------------------------------------------------------------------------------
-3. TECHNOLOGY STACK (TOOLS USED)
+- GET /api/health : Server health check.
+- GET /api/weather/:district : Live rainfall (mm) and 7-day forecast.
+- POST /api/predict : Public endpoint calculating risk via the Python AI engine.
+- POST /api/admin/ai-model/predict : Admin endpoint for detailed AI predictions with confidence.
+- GET /api/admin/dashboard/stats : Aggregates active alert and report counts.
+- PATCH /api/admin/reports/:id/verify : Approves or rejects citizen reports.
+- POST /api/alerts/send : Broadcasts emergency alerts to district residents.
+- POST http://127.0.0.1:8000/predict : Python FastAPI geotechnical inference engine.
+
+
+6. DATABASE STRUCTURE (SUPABASE)
 --------------------------------------------------------------------------------
+- public.users: User accounts (Admin, District Officer, Field Agent, Citizen).
+- public.locations: Monitored landslide spots across 8 NE States.
+- public.reports: Incident reports with photos, GPS, and status (Pending/Verified/Rejected).
+- incident-media: Cloud storage bucket for photo and video uploads (up to 50MB).
 
-Layer                   Tool               What It Does
+Note: The full database setup SQL script is located in supabase_schema.sql.
+
+
+7. HOW TO RUN THE APP LOCALLY
 --------------------------------------------------------------------------------
-Frontend (User UI)      React              Builds web pages, forms, and screens.
-                        Tailwind CSS       Provides clean, modern, mobile styling.
-                        Leaflet Maps       Interactive maps with hazard pins & GPS.
-                        Chart.js           Simple charts for risk and statistics.
+From Project Root:
+  npm run dev          -> Starts website at http://localhost:5173
 
-Backend (Server)        Node.js & Express  Connects frontend to database, manages
-                                           requests, and coordinates alerts.
-
-AI / Machine Learning   Python & FastAPI   Calculates landslide risk based on 
-                                           rainfall, soil, slope, and history.
-
-Database & Storage      Supabase           PostgreSQL database storing users, 
-                                           locations, and citizen reports.
-                        Supabase Storage   Cloud folder storing incident photos 
-                                           and videos.
-
-
---------------------------------------------------------------------------------
-4. PROJECT FOLDERS (WHERE EVERYTHING LIVES)
---------------------------------------------------------------------------------
-
-  * frontend/
-    The website users and officers see in their browser.
-    - src/pages/        : Home page, Login, Citizen screens, Admin screens.
-    - src/components/   : Reusable parts like maps, charts, and buttons.
-    - src/services/     : Functions that fetch and send data to the backend.
-
-  * backend/
-    The Node.js server running in the background.
-    - src/routes/       : Defines API links for reports, weather, and alerts.
-    - src/controllers/  : Business logic handling each API request.
-    - src/providers/    : Modules for weather data, SMS, and notifications.
-
-  * ml-services/
-    The Python AI risk prediction engine.
-    - app/services/     : Formula calculating risk (Low, Medium, High, Critical).
-    - app/routers/      : Prediction API endpoint (/predict).
-
-  * supabase_schema.sql
-    Database setup file containing tables, security rules, and sample data.
-
-
---------------------------------------------------------------------------------
-5. DATABASE STRUCTURE (HOW DATA IS STORED)
---------------------------------------------------------------------------------
-
-1. USERS TABLE
-   Stores accounts for people who can log into the system:
-   - Name       : User's full name.
-   - Email      : Unique login email address.
-   - Role       : Admin, District Officer, Field Agent, or Citizen.
-   - District   : Assigned district (e.g., Shillong, Kohima, Aizawl).
-   - Status     : Active or Inactive.
-
-2. LOCATIONS TABLE
-   Stores known landslide-prone sites and hills being monitored:
-   - Name       : Name of the hill or road corridor.
-   - District   : District name.
-   - Lat & Lon  : Exact GPS coordinates.
-   - Risk Level : Current danger level (Low, Medium, High, Critical).
-   - Status     : Monitored or Resolved.
-
-3. REPORTS TABLE
-   Stores all incident submissions from citizens and field agents:
-   - Incident   : Landslide, Slope Crack, Road Blockage, or Flooding.
-   - Location   : District name and GPS coordinates.
-   - Description: Details written by the citizen.
-   - Media URL  : Web link to the uploaded photo or video.
-   - Severity   : Minor, Moderate, or Severe.
-   - Status     : Pending, Verified, or Rejected.
-
-4. MEDIA STORAGE BUCKET (incident-media)
-   - Secure cloud storage holding citizen photos and videos.
-   - Supports JPEG, PNG, WebP, and MP4 files up to 50MB each.
-
-Relationships in Plain Words:
-  * One user can submit multiple reports over time.
-  * Each report's GPS coordinates can be viewed on the map.
-  * When an officer verifies a report, status changes from Pending to Verified, 
-    triggering emergency alerts.
-
-
---------------------------------------------------------------------------------
-6. API REFERENCE (SIMPLE & CLEAR)
---------------------------------------------------------------------------------
-
-1. REPORT APIS:
-   - Verify or Reject Report
-     Link: PATCH /api/admin/reports/:id/verify
-     What it does: Approves (Verify) or declines (Reject) a citizen report.
-     Extra info: If verified, automatically alerts district disaster teams.
-
-   - Citizen Report Notification
-     Link: POST /api/citizen/reports/notify
-     What it does: Tells the control room that a new report was submitted.
-     Extra info: Sends email and push notifications to the duty desk.
-
-2. AI RISK PREDICTION API:
-   - Calculate Landslide Risk
-     Link: POST /api/admin/ai-model/predict
-     What it does: Calculates risk level (Low, Medium, High, Critical).
-     Extra info: Automatically looks up local rainfall if not supplied.
-
-3. EMERGENCY ALERT API:
-   - Send District Alert
-     Link: POST /api/alerts/send
-     What it does: Broadcasts emergency SMS and push alerts to a district.
-     Extra info: Used during severe landslides or road closures.
-
-4. WEATHER API:
-   - Get District Weather
-     Link: GET /api/weather/:district
-     What it does: Gets 24-hour rainfall in mm and a 7-day forecast.
-     Extra info: Used on the home page and by the AI prediction model.
-
-5. DASHBOARD SUMMARY API:
-   - Get Dashboard Statistics
-     Link: GET /api/admin/dashboard/stats
-     What it does: Returns counts of locations, pending reports, and risk levels.
-     Extra info: Powers the summary cards and charts in the admin console.
-
-6. SYSTEM HEALTH API:
-   - Check Server Status
-     Link: GET /api/health
-     What it does: Confirms that the backend server is online and operational.
-
-
---------------------------------------------------------------------------------
-7. HOW TO RUN THE PROJECT LOCALLY
---------------------------------------------------------------------------------
-
-1. Database Setup:
-   - Open your Supabase project SQL Editor.
-   - Paste and run the code from "supabase_schema.sql".
-
-2. Start the Backend API (Node.js):
-   - Open a terminal and run:
-       cd backend
-       npm install
-       npm run dev
-   - Server runs on: http://localhost:5000
-
-3. Start the AI Service (Python):
-   - Open a terminal and run:
-       cd ml-services
-       python -m venv venv
-       venv\Scripts\activate       (On Windows)
-       source venv/bin/activate    (On Mac/Linux)
-       pip install -r requirements.txt
-       uvicorn app.main:app --reload --port 8000
-   - Service runs on: http://localhost:8000
-
-4. Start the Frontend Website (React):
-   - Open a terminal and run:
-       cd frontend
-       npm install
-       npm run dev
-   - Open your browser at: http://localhost:5173
+Starting individual services:
+  Backend:   cd backend && node server.js                     -> http://localhost:5000
+  AI Engine: cd ml-services && python -m uvicorn app.main:app --port 8000 -> http://localhost:8000
+  Frontend:  cd frontend && npm run dev                       -> http://localhost:5173
 ================================================================================
